@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>Unity SRP 01-自定义管线</title>
+      <link href="/2024/07/25/Unity-SRP-01-%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AE%A1%E7%BA%BF/"/>
+      <url>/2024/07/25/Unity-SRP-01-%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AE%A1%E7%BA%BF/</url>
+      
+        <content type="html"><![CDATA[<hr><h1 id="Unity-SRP-01-自定义管线"><a href="#Unity-SRP-01-自定义管线" class="headerlink" title="Unity SRP 01-自定义管线"></a>Unity SRP 01-自定义管线</h1><h2 id="1-渲染管线"><a href="#1-渲染管线" class="headerlink" title="1 渲染管线"></a>1 渲染管线</h2><p>为了渲染任何东西，必须确定必须绘制哪些形状，在何处、何时以及使用什么设置。这可能会变得非常复杂，具体取决于涉及多少效果。灯光、阴影、透明度、图像效果、体积效果等都必须按照正确的顺序进行处理，才能得到最终图像。这就是渲染管线的作用。</p><p>过去，Unity 仅支持几种内置的渲染方式（Build-in RP）。Unity2018添加了两个使用这种新方法制作的实验性 RP：<u>Lightweight RP and the High Definition RP</u>。在 Unity 2019 中，轻量级 RP 不再是实验性的，而是在 Unity 2019.3 中更名为<u>URP</u>。</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> Unity SRP </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 游戏渲染 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Start</title>
       <link href="/2024/07/25/Start/"/>
       <url>/2024/07/25/Start/</url>

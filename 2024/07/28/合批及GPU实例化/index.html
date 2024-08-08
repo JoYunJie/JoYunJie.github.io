@@ -168,7 +168,7 @@
 
 <h2 id="批量渲染"><a href="#批量渲染" class="headerlink" title="批量渲染"></a>批量渲染</h2><p>一般被叫做”合批“。</p>
 <p>批量渲染是通过减少CPU向GPU <strong>发送渲染命令（DrawCall）的次数，以及减少GPU切换渲染状态的次数</strong>，尽量让GPU一次多做一些事情，来提升逻辑线和渲染线的整体效率。</p>
-<h3 id="Draw-Call性能消耗原因"><a href="#Draw-Call性能消耗原因" class="headerlink" title="Draw Call性能消耗原因"></a>Draw Call性能消耗原因</h3><p>应用中每次渲染，API调用都会经过”Application -&gt; Runtime -&gt; Driver -&gt; GPU “ 的过程。<strong>Runtime (运行时环境)</strong>负责解释和执行应用层调用的图形指令，Runtime 会将这些高层次的绘制调用转化为底层的图形指令，并进行必要的管理工作，比如状态设置、资源管理等。</p>
+<h3 id="Draw-Call性能消耗原因"><a href="#Draw-Call性能消耗原因" class="headerlink" title="Draw Call性能消耗原因"></a>Draw Call性能消耗原因</h3><p>应用中每次渲染，API调用都会经过”Application -&gt; Runtime -&gt; Driver -&gt; GPU “ 的过程。**Runtime (运行时环境)**负责解释和执行应用层调用的图形指令，Runtime 会将这些高层次的绘制调用转化为底层的图形指令，并进行必要的管理工作，比如状态设置、资源管理等。</p>
 <p>其中Draw Call性能消耗原因是，命令从Runtime到Driver的过程中，操作系统要发生<u>用户模式到内核模式的切换</u>，而模式切换对CPU来说是意见非常耗时的工作。</p>
 <p>Runtime中的<u>Command Buffer可以将一些没有必要马上发送给Driver的命令缓冲起来</u>，在适当的时机<u>一起发送给Driver</u>，进而在显卡执行。以这样的方式来寻求最少的CPU模式切换，提升效率。</p>
 <h3 id="合批技术又分为离线合批和实时合批"><a href="#合批技术又分为离线合批和实时合批" class="headerlink" title="合批技术又分为离线合批和实时合批"></a>合批技术又分为离线合批和实时合批</h3><p>离线合批就是在游戏运行前，把相关资源合批处理，减轻引擎实时渲染的负担。</p>
@@ -209,14 +209,14 @@
 <h4 id="优点-1"><a href="#优点-1" class="headerlink" title="优点"></a><strong>优点</strong></h4><p>合批的物体，相对动态批处理，允许使用统一材质且对应的材质属性（材质属性结构需要保持一致）</p>
 <p><img src="/2024/07/28/%E5%90%88%E6%89%B9%E5%8F%8AGPU%E5%AE%9E%E4%BE%8B%E5%8C%96/image-20240728153406766.png" alt="image-20240728153406766"></p>
 <h3 id="SRP-Batcher"><a href="#SRP-Batcher" class="headerlink" title="SRP Batcher"></a>SRP Batcher</h3><p>在使用LWRP或者HWRP时，开启SRP Batcher的情况下，只要物体的<strong>Shader中变体</strong>一致，就可以启用SRP Batcher加速。</p>
-<p>与GPU Instancing原理相似，不同的是<strong><u>因为不用重新创建Constant Buffer[每次只需要在Buffer上进行更新和添加]，所以本质上SRP Batcher不会降低Draw Calls的数量，它只会降低Draw Calls之间的GPU设置成本</u></strong></p>
+<p>与GPU Instancing原理相似，不同的是**<u>因为不用重新创建Constant Buffer[每次只需要在Buffer上进行更新和添加]，所以本质上SRP Batcher不会降低Draw Calls的数量，它只会降低Draw Calls之间的GPU设置成本</u>**</p>
 <h4 id="限制-2"><a href="#限制-2" class="headerlink" title="限制"></a>限制</h4><p>Shader变体不同无法合并，比如同一个Shader创建的材质，但是材质选项不同</p>
 <p><img src="/2024/07/28/%E5%90%88%E6%89%B9%E5%8F%8AGPU%E5%AE%9E%E4%BE%8B%E5%8C%96/image-20240727223106405.png" alt="image-srp2"></p>
 <p><img src="/2024/07/28/%E5%90%88%E6%89%B9%E5%8F%8AGPU%E5%AE%9E%E4%BE%8B%E5%8C%96/srp.png" alt="image-srp"></p>
 <hr>
 <p><strong>参考文章</strong></p>
 <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/chqj_163/article/details/117191293">【Unity游戏开发】静态、动态合批与GPU Instancing-CSDN博客</a></p>
-<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/98642798">关于静态批处理/动态批处理/GPU Instancing /SRP Batcher的详细剖析 - 知乎 (zhihu.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/98642798">关于静态批处理&#x2F;动态批处理&#x2F;GPU Instancing &#x2F;SRP Batcher的详细剖析 - 知乎 (zhihu.com)</a></p>
 <hr>
 <p><strong>待学习</strong></p>
 <p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/34499251">U3D优化批处理-GPU Instancing了解一下 - 知乎 (zhihu.com)</a></p>

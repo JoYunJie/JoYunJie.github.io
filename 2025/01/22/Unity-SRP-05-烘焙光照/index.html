@@ -1,0 +1,361 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Unity SRP 05-烘焙光照 | YunJie's BLOG</title><meta name="author" content="云杰"><meta name="copyright" content="云杰"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="Unity SRP 05-烘焙光照 本文重点：              烘焙静态全局照明         采样光照贴图、探针和 LPPV         创建 meta pass         支持自发光表面          因为有点懒，而且SRP 04的东西比较多，所以看完博客和代码后，我们直接来简单写一写SRP 05的学习记录。 烘焙静态光源提前烘焙静态光源，可以减少实时计算量和添加运">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Unity SRP 05-烘焙光照">
+<meta property="og:url" content="http://example.com/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/index.html">
+<meta property="og:site_name" content="YunJie&#39;s BLOG">
+<meta property="og:description" content="Unity SRP 05-烘焙光照 本文重点：              烘焙静态全局照明         采样光照贴图、探针和 LPPV         创建 meta pass         支持自发光表面          因为有点懒，而且SRP 04的东西比较多，所以看完博客和代码后，我们直接来简单写一写SRP 05的学习记录。 烘焙静态光源提前烘焙静态光源，可以减少实时计算量和添加运">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/deku.png">
+<meta property="article:published_time" content="2025-01-22T14:58:31.000Z">
+<meta property="article:modified_time" content="2025-01-24T07:39:33.021Z">
+<meta property="article:author" content="云杰">
+<meta property="article:tag" content="游戏渲染">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/deku.png"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="http://example.com/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css?v=4.13.0"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid@4.11.1/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Unity SRP 05-烘焙光照',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2025-01-24 15:39:33'
+}</script><script>(win=>{
+      win.saveToLocal = {
+        set: (key, value, ttl) => {
+          if (ttl === 0) return
+          const now = Date.now()
+          const expiry = now + ttl * 86400000
+          const item = {
+            value,
+            expiry
+          }
+          localStorage.setItem(key, JSON.stringify(item))
+        },
+      
+        get: key => {
+          const itemStr = localStorage.getItem(key)
+      
+          if (!itemStr) {
+            return undefined
+          }
+          const item = JSON.parse(itemStr)
+          const now = Date.now()
+      
+          if (now > item.expiry) {
+            localStorage.removeItem(key)
+            return undefined
+          }
+          return item.value
+        }
+      }
+    
+      win.getScript = (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        script.onerror = reject
+        script.onload = script.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          script.onload = script.onreadystatechange = null
+          resolve()
+        }
+
+        Object.keys(attr).forEach(key => {
+          script.setAttribute(key, attr[key])
+        })
+
+        document.head.appendChild(script)
+      })
+    
+      win.getCSS = (url, id = false) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onerror = reject
+        link.onload = link.onreadystatechange = function() {
+          const loadState = this.readyState
+          if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+          link.onload = link.onreadystatechange = null
+          resolve()
+        }
+        document.head.appendChild(link)
+      })
+    
+      win.activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+        if (t === 'dark') activateDarkMode()
+        else if (t === 'light') activateLightMode()
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+      const detectApple = () => {
+        if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+          document.documentElement.classList.add('apple')
+        }
+      }
+      detectApple()
+    })(window)</script><meta name="generator" content="Hexo 7.3.0"><link rel="alternate" href="/atom.xml" title="YunJie's BLOG" type="application/atom+xml">
+</head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.png" data-original="/img/deku.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-graduation-cap"></i><span> 博文</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url('/img/bk.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="YunJie's BLOG"><span class="site-name">YunJie's BLOG</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page group" href="javascript:void(0);"><i class="fa-fw fa fa-graduation-cap"></i><span> 博文</span><i class="fas fa-chevron-down"></i></a><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fa fa-archive"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fa fa-folder-open"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">Unity SRP 05-烘焙光照</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-01-22T14:58:31.000Z" title="发表于 2025-01-22 22:58:31">2025-01-22</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2025-01-24T07:39:33.021Z" title="更新于 2025-01-24 15:39:33">2025-01-24</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/Unity-SRP/">Unity SRP</a></span></div><div class="meta-secondline"></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><hr>
+<h1 id="Unity-SRP-05-烘焙光照"><a href="#Unity-SRP-05-烘焙光照" class="headerlink" title="Unity SRP 05-烘焙光照"></a>Unity SRP 05-烘焙光照</h1><table><tr><td bgcolor="MintCream">
+本文重点：<br>
+    <ul>
+        <li>烘焙静态全局照明</li>
+        <li>采样光照贴图、探针和 LPPV</li>
+        <li>创建 meta pass</li>
+        <li>支持自发光表面</li>
+    </ul> 
+</td></tr></table>
+
+
+<p>因为有点懒，而且SRP 04的东西比较多，所以看完博客和代码后，我们直接来简单写一写SRP 05的学习记录。</p>
+<h2 id="烘焙静态光源"><a href="#烘焙静态光源" class="headerlink" title="烘焙静态光源"></a>烘焙静态光源</h2><p>提前烘焙静态光源，可以减少实时计算量和添加运行时无法计算的间接光照（Games202中提出，在实时渲染里面，全局光照是<strong>比直接光照多一次bounce的间接光照</strong>）</p>
+<img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250123104103664.png" alt="image-20250123104103664" style="zoom: 80%;">
+
+<p>烘焙光照的缺点是它是静态的，因此无法在运行时更改。它还需要存储，这会增加构建大小和内存使用量。</p>
+<h3 id="场景照明设置"><a href="#场景照明设置" class="headerlink" title="场景照明设置"></a>场景照明设置</h3><p>在Lighting窗口中，选择Mixed Lighting中勾选Baked Global Illumination，启用烘焙全局照明，选择Baked Indirect，这意味着我们烘焙所有静态间接光照。</p>
+<img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250123104503064.png" alt="image-20250123104503064" style="zoom:80%;">
+
+<p>我们可以调整.lighting文件，设置光照贴图的属性</p>
+<img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250123104800137.png" alt="image-20250123104800137" style="zoom:80%;">
+
+<img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250123104819689.png" alt="image-20250123104819689" style="zoom: 80%;">
+
+<p>这里LightMap属性面板可以调节LightMap Paramters的质量，以及分辨率、反射次数、采样次数，越多的反射次数和采样次数会影响精度，但是烘焙时间随之上升。</p>
+<blockquote>
+<p>[!NOTE]</p>
+<p>将场景的 Lighting Mode 设置为 <strong>Baked Indirect</strong> 时，混合光源的行为如下：</p>
+<ul>
+<li>混合光源照亮的动态游戏对象将接收：<ul>
+<li>实时直接光照。</li>
+<li>烘焙间接光照（使用光照探针）。</li>
+<li>动态游戏对象的阴影（使用阴影贴图），不超过阴影距离 (Shadow Distance)。</li>
+<li>静态游戏对象的实时阴影（使用阴影贴图），不超过阴影距离 (Shadow Distance)。</li>
+</ul>
+</li>
+<li>混合光源照亮的静态游戏对象将接收：<ul>
+<li>实时直接光照。</li>
+<li>烘焙间接光照（使用光照贴图）。</li>
+<li>静态游戏对象的实时阴影（使用阴影贴图），不超过阴影距离 (Shadow Distance)。</li>
+<li>动态游戏对象的实时阴影（使用阴影贴图），不超过阴影距离 (Shadow Distance)。</li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250123110447904.png" alt="image-20250123110447904"></p>
+<h3 id="场景光源设置"><a href="#场景光源设置" class="headerlink" title="场景光源设置"></a>场景光源设置</h3><p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250123112818493.png" alt="image-20250123112818493"></p>
+<p>Mixed表示该光源贡献直接光照，同时也贡献间接光照到光照探针或者光照贴图</p>
+<h3 id="静态对象"><a href="#静态对象" class="headerlink" title="静态对象"></a>静态对象</h3><p>烘焙过程中，这里将地平面和所有立方体设置为光线反射的物体，从而贡献间接光，切换后该物体模式还会自动切换为static。</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250123115900978.png" alt="image-20250123115900978"></p>
+<p>勾选自动烘焙，当场景光源或贡献烘焙间接光照物体移动或发生改变，unity会自动重新烘焙间接光照。</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250123120543168.png" alt="image-20250123120543168"></p>
+<p>烘焙好的光照贴图如下</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250123120753767.png" alt="image-20250123120753767"></p>
+<blockquote>
+<p>[!IMPORTANT]</p>
+<p>为什么这里没有场景中绿色静态地面贡献的绿色光照，因为在没有设置meta pass前，默认都是白色物体反射光源，图中蓝色部分是天空盒子的环境光</p>
+</blockquote>
+<p>去掉天空盒子后</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250123120949768.png" alt="image-20250123120949768"></p>
+<h3 id="采样光照贴图"><a href="#采样光照贴图" class="headerlink" title="采样光照贴图"></a>采样光照贴图</h3><p>要获取光照贴图 UV 坐标，Unity 必须将它们发送到着色器。必须指示管道对每个经过光照贴图的对象执行此操作。这是通过将绘图设置的每对象数据属性完成的</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> drawingSettings = <span class="keyword">new</span> DrawingSettings(</span><br><span class="line">			unlitShaderTagId, sortingSettings</span><br><span class="line">		) &#123;</span><br><span class="line">			enableDynamicBatching = useDynamicBatching,</span><br><span class="line">			enableInstancing = useGPUInstancing,</span><br><span class="line">			perObjectData = PerObjectData.Lightmaps</span><br><span class="line">		&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>在着色器中，添加multi-compile 指令</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#pragma multi_compile _ LIGHTMAP_ON</span></span><br></pre></td></tr></table></figure>
+
+<p>为了方便开启关闭光照贴图采样，这里启用宏来控制</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">struct Attributes &#123;</span><br><span class="line">	…</span><br><span class="line">	GI_ATTRIBUTE_DATA</span><br><span class="line">	UNITY_VERTEX_INPUT_INSTANCE_ID</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct Varyings &#123;</span><br><span class="line">	…</span><br><span class="line">	GI_VARYINGS_DATA</span><br><span class="line">	UNITY_VERTEX_INPUT_INSTANCE_ID</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">Varyings LitPassVertex (Attributes input) &#123;</span><br><span class="line">	Varyings output;</span><br><span class="line">	UNITY_SETUP_INSTANCE_ID(input);</span><br><span class="line">	UNITY_TRANSFER_INSTANCE_ID(input, output);</span><br><span class="line">	TRANSFER_GI_DATA(input, output);</span><br><span class="line">	…</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">...</span><br><span class="line">    GI gi = GetGI(GI_FRAGMENT_DATA(input));</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#if defined(LIGHTMAP_ON)</span></span><br><span class="line">	<span class="meta">#define GI_ATTRIBUTE_DATA float2 lightMapUV : TEXCOORD1;</span></span><br><span class="line">	<span class="meta">#define GI_VARYINGS_DATA float2 lightMapUV : VAR_LIGHT_MAP_UV;</span></span><br><span class="line">	<span class="meta">#define TRANSFER_GI_DATA(input, output) output.lightMapUV = input.lightMapUV;</span></span><br><span class="line">	<span class="meta">#define GI_FRAGMENT_DATA(input) input.lightMapUV</span></span><br><span class="line"><span class="meta">#else</span></span><br><span class="line">	<span class="meta">#define GI_ATTRIBUTE_DATA</span></span><br><span class="line">	<span class="meta">#define GI_VARYINGS_DATA</span></span><br><span class="line">	<span class="meta">#define TRANSFER_GI_DATA(input, output)</span></span><br><span class="line">	<span class="meta">#define GI_FRAGMENT_DATA(input) 0.0</span></span><br><span class="line"><span class="meta">#endif</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>光照贴图坐标通常由 Unity 为每个网格自动生成，或者是导入的网格数据的一部分。它们定义了一个纹理展开，该展开将网格展平，使其映射到纹理坐标。展开在光照贴图中按对象进行缩放和定位，因此每个实例都有自己的空间。这与应用于基础 UV 的缩放和平移类似。我们也必须将其应用于光照贴图 UV。</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">CBUFFER_START(UnityPerDraw)</span><br><span class="line">	...</span><br><span class="line">	float4 unity_LightmapST;</span><br><span class="line">	float4 unity_DynamicLightmapST;</span><br><span class="line">CBUFFER_END</span><br><span class="line">    ...</span><br><span class="line"><span class="meta">#define TRANSFER_GI_DATA(input, output) \</span></span><br><span class="line">		output.lightMapUV = input.lightMapUV * \</span><br><span class="line">		unity_LightmapST.xy + unity_LightmapST.zw;</span><br></pre></td></tr></table></figure>
+
+<p>将变换后uv显示</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124120450833.png" alt="image-20250124120450833"></p>
+<p>声明光照贴图采样器</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#include &quot;Packages/com.unity.render-pipelines.core/ShaderLibrary/EntityLighting.hlsl&quot;</span></span><br><span class="line"></span><br><span class="line">TEXTURE2D(unity_Lightmap);</span><br><span class="line">SAMPLER(samplerunity_Lightmap);</span><br></pre></td></tr></table></figure>
+
+<p>unity_Lightmap定义在BuiltinGIUtilities.hlsl中</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124120050483.png" alt="image-20250124120050483"></p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> SampleSingleLightmap(</span><br><span class="line">			TEXTURE2D_ARGS(unity_Lightmap, samplerunity_Lightmap), lightMapUV,</span><br><span class="line">			float4(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>)</span><br><span class="line">		);</span><br></pre></td></tr></table></figure>
+
+<p>这里可以添加有一个布尔值，用于指示光照贴图是否已压缩。</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> SampleSingleLightmap(</span><br><span class="line">			TEXTURE2D_ARGS(unity_Lightmap, samplerunity_Lightmap), lightMapUV,</span><br><span class="line">			float4(<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>),</span><br><span class="line">			<span class="meta">#if defined(UNITY_LIGHTMAP_FULL_HDR)</span></span><br><span class="line">				<span class="literal">false</span>,</span><br><span class="line">			<span class="meta">#else</span></span><br><span class="line">				<span class="literal">true</span>,</span><br><span class="line">			<span class="meta">#endif</span></span><br><span class="line">			float4(LIGHTMAP_HDR_MULTIPLIER, LIGHTMAP_HDR_EXPONENT, <span class="number">0.0</span>, <span class="number">0.0</span>)</span><br><span class="line">		);</span><br></pre></td></tr></table></figure>
+
+<p>EntityLighting.hlsl中定义</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">real3 SampleSingleLightmap(TEXTURE2D_LIGHTMAP_PARAM(lightmapTex, lightmapSampler), LIGHTMAP_EXTRA_ARGS, float4 transform, <span class="type">bool</span> encodedLightmap, real4 decodeInstructions)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// transform is scale and bias</span></span><br><span class="line">    uv = uv * transform.xy + transform.zw;</span><br><span class="line">    real3 illuminance = real3(<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>);</span><br><span class="line">    <span class="comment">// Remark: baked lightmap is RGBM for now, dynamic lightmap is RGB9E5</span></span><br><span class="line">    <span class="keyword">if</span> (encodedLightmap)</span><br><span class="line">    &#123;</span><br><span class="line">        real4 encodedIlluminance = SAMPLE_TEXTURE2D_LIGHTMAP(lightmapTex, lightmapSampler, LIGHTMAP_EXTRA_ARGS_USE).rgba;</span><br><span class="line">        illuminance = DecodeLightmap(encodedIlluminance, decodeInstructions);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        illuminance = SAMPLE_TEXTURE2D_LIGHTMAP(lightmapTex, lightmapSampler, LIGHTMAP_EXTRA_ARGS_USE).rgb;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> illuminance;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>采样光照贴图后场景</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124125507910.png" alt="image-20250124125507910"></p>
+<p>将环境光照强度减少到0的场景</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124125537737.png" alt="image-20250124125537737"></p>
+<blockquote>
+<p>[!NOTE]</p>
+<p>目前我们只关注了方向光，其他类型光源进行烘焙，需要一些额外工作才能正确烘焙</p>
+</blockquote>
+<h2 id="光照探针"><a href="#光照探针" class="headerlink" title="光照探针"></a>光照探针</h2><p>通过创建光照探针组，将光照探针添加到场景中。这将创建一个游戏对象，其组件默认包含一个立方体形状的探针（八个顶角）。启用后，您可以移动、复制和删除单个探针，就像它们是游戏对象一样。</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124130312515.png" alt="image-20250124130312515"></p>
+<p>一个场景中可以有多个探针组。Unity 将它们的所有探针组合在一起，然后创建一个四面体体积网格，将它们全部连接起来。每个动态对象最终位于一个四面体内。对其顶点处的四个探针进行插值，以达到应用于对象的最终照明。如果对象最终位于探针覆盖的区域之外，则使用最近的三角形，因此照明可能会显得很奇怪。</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124130418697.png" alt="image-20250124130418697"></p>
+<p>开启显示权重，能显示受光照探针影响的物体，其四面体指针的位置</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124130611885.png" alt="image-20250124130611885"></p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124130626878.png" alt="image-20250124130626878"></p>
+<h3 id="采样探针"><a href="#采样探针" class="headerlink" title="采样探针"></a>采样探针</h3><p>同上，将光照探针数据按照对象传递给GPU</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">perObjectData = PerObjectData.Lightmaps | PerObjectData.LightProbe</span><br></pre></td></tr></table></figure>
+
+<p>所需数据由 7 个向量组成，分别表示红光、绿光和蓝光的多项式分量以及常量。如图是球谐函数的计算，但是unity应该是预先计算好了相关系数，跟图中计算公式不同，推测unity计算公式是:<br>$$<br>color &#x3D; \sum_{i &#x3D; 0}^2 {c_i\cdot N}<br>$$<br>其中L1、L2阶系数有RGB三个通道，L0是常数【个人推测】</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124135326329.png" alt="image-20250124135326329"></p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">CBUFFER_START(UnityPerDraw)</span><br><span class="line">	…</span><br><span class="line"></span><br><span class="line">	float4 unity_SHAr;</span><br><span class="line">	float4 unity_SHAg;</span><br><span class="line">	float4 unity_SHAb;</span><br><span class="line">	float4 unity_SHBr;</span><br><span class="line">	float4 unity_SHBg;</span><br><span class="line">	float4 unity_SHBb;</span><br><span class="line">	float4 unity_SHC;</span><br><span class="line">CBUFFER_END</span><br><span class="line">    </span><br><span class="line">float3 SampleLightProbe (Surface surfaceWS) &#123;</span><br><span class="line">	<span class="meta">#if defined(LIGHTMAP_ON)</span></span><br><span class="line">		<span class="keyword">return</span> <span class="number">0.0</span>;</span><br><span class="line">	<span class="meta">#else</span></span><br><span class="line">		float4 coefficients[<span class="number">7</span>];</span><br><span class="line">		coefficients[<span class="number">0</span>] = unity_SHAr;</span><br><span class="line">		coefficients[<span class="number">1</span>] = unity_SHAg;</span><br><span class="line">		coefficients[<span class="number">2</span>] = unity_SHAb;</span><br><span class="line">		coefficients[<span class="number">3</span>] = unity_SHBr;</span><br><span class="line">		coefficients[<span class="number">4</span>] = unity_SHBg;</span><br><span class="line">		coefficients[<span class="number">5</span>] = unity_SHBb;</span><br><span class="line">		coefficients[<span class="number">6</span>] = unity_SHC;</span><br><span class="line">		<span class="keyword">return</span> <span class="built_in">max</span>(<span class="number">0.0</span>, SampleSH9(coefficients, surfaceWS.normal));</span><br><span class="line">	<span class="meta">#endif</span></span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">    </span><br><span class="line">GI GetGI (float2 lightMapUV, Surface surfaceWS) &#123;</span><br><span class="line">	GI gi;</span><br><span class="line">	gi.diffuse = SampleLightMap(lightMapUV) + SampleLightProbe(surfaceWS);</span><br><span class="line">	<span class="keyword">return</span> gi;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后效果</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124142037541.png" alt="image-20250124142037541"></p>
+<h2 id="LPPV（LightProbeProxyVolume）"><a href="#LPPV（LightProbeProxyVolume）" class="headerlink" title="LPPV（LightProbeProxyVolume）"></a>LPPV（<a target="_blank" rel="noopener" href="http://docs.unity3d.com/Documentation/ScriptReference/LightProbeProxyVolume.html">LightProbeProxyVolume</a>）</h2><p>光照探针适用于相当小的动态对象，但由于光照基于单个点，因此不适用于较大的对象。例如，我向场景中添加了两个拉伸的立方体。因为它们的位置位于黑暗区域内，所以立方体均匀地暗，即使这显然与照明不匹配。</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124142242264.png" alt="image-20250124142242264"></p>
+<p>将数据发送到每个对象的 GPU</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">perObjectData =</span><br><span class="line">				PerObjectData.Lightmaps | PerObjectData.LightProbe |</span><br><span class="line">				PerObjectData.LightProbeProxyVolume</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">CBUFFER_START(UnityPerDraw)</span><br><span class="line">	…</span><br><span class="line"></span><br><span class="line">	float4 unity_ProbeVolumeParams;</span><br><span class="line">	float4x4 unity_ProbeVolumeWorldToObject;</span><br><span class="line">	float4 unity_ProbeVolumeSizeInv;</span><br><span class="line">	float4 unity_ProbeVolumeMin;</span><br><span class="line">CBUFFER_END</span><br><span class="line">    </span><br><span class="line">...</span><br><span class="line">    </span><br><span class="line">TEXTURE3D_FLOAT(unity_ProbeVolumeSH);</span><br><span class="line">SAMPLER(samplerunity_ProbeVolumeSH);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (unity_ProbeVolumeParams.x) &#123;</span><br><span class="line">    <span class="comment">//这里用L1的球谐函数</span></span><br><span class="line">			<span class="keyword">return</span> SampleProbeVolumeSH4(</span><br><span class="line">				TEXTURE3D_ARGS(unity_ProbeVolumeSH, samplerunity_ProbeVolumeSH),</span><br><span class="line">				surfaceWS.position, surfaceWS.normal,</span><br><span class="line">				unity_ProbeVolumeWorldToObject,</span><br><span class="line">				unity_ProbeVolumeParams.y, unity_ProbeVolumeParams.z,</span><br><span class="line">				unity_ProbeVolumeMin.xyz, unity_ProbeVolumeSizeInv.xyz</span><br><span class="line">			);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span> &#123;</span><br><span class="line">			float4 coefficients[<span class="number">7</span>];</span><br><span class="line">			coefficients[<span class="number">0</span>] = unity_SHAr;</span><br><span class="line">			coefficients[<span class="number">1</span>] = unity_SHAg;</span><br><span class="line">			coefficients[<span class="number">2</span>] = unity_SHAb;</span><br><span class="line">			coefficients[<span class="number">3</span>] = unity_SHBr;</span><br><span class="line">			coefficients[<span class="number">4</span>] = unity_SHBg;</span><br><span class="line">			coefficients[<span class="number">5</span>] = unity_SHBb;</span><br><span class="line">			coefficients[<span class="number">6</span>] = unity_SHC;</span><br><span class="line">			<span class="keyword">return</span> <span class="built_in">max</span>(<span class="number">0.0</span>, SampleSH9(coefficients, surfaceWS.normal));</span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最终效果</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124143702191.png" alt="image-20250124143702191"></p>
+<h2 id="Meta-Pass"><a href="#Meta-Pass" class="headerlink" title="Meta Pass"></a>Meta Pass</h2><p>由于间接漫反射光会从曲面上反射，因此它应受这些曲面的漫反射率的影响。目前不会发生这种情况。Unity 将我们的表面视为均匀的白色。Unity 使用特殊的 meta pass 来确定烘焙时的反射光。由于我们尚未定义此类通道，因此 Unity 使用默认通道，最终为白色。</p>
+<p>添加一个Pass，设置LightMode&#x3D;Meta</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Pass &#123;</span><br><span class="line">			Tags &#123;</span><br><span class="line">				&quot;LightMode&quot; = &quot;Meta&quot;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">			Cull Off</span><br><span class="line"></span><br><span class="line">			HLSLPROGRAM</span><br><span class="line">			<span class="meta">#pragma target 3.5</span></span><br><span class="line">			<span class="meta">#pragma vertex MetaPassVertex</span></span><br><span class="line">			<span class="meta">#pragma fragment MetaPassFragment</span></span><br><span class="line">			<span class="meta">#include &quot;MetaPass.hlsl&quot;</span></span><br><span class="line">			ENDHLSL</span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
+
+<p>编写MetaPass.hlsl</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#ifndef CUSTOM_META_PASS_INCLUDED</span></span><br><span class="line"><span class="meta">#define CUSTOM_META_PASS_INCLUDED</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#include &quot;../ShaderLibrary/Surface.hlsl&quot;</span></span><br><span class="line"><span class="meta">#include &quot;../ShaderLibrary/Shadows.hlsl&quot;</span></span><br><span class="line"><span class="meta">#include &quot;../ShaderLibrary/Light.hlsl&quot;</span></span><br><span class="line"><span class="meta">#include &quot;../ShaderLibrary/BRDF.hlsl&quot;</span></span><br><span class="line"></span><br><span class="line">bool4 unity_MetaFragmentControl;</span><br><span class="line"><span class="type">float</span> unity_OneOverOutputBoost;</span><br><span class="line"><span class="type">float</span> unity_MaxOutputValue;</span><br><span class="line"></span><br><span class="line">struct Attributes &#123;</span><br><span class="line">	float3 positionOS : POSITION;</span><br><span class="line">	float2 baseUV : TEXCOORD0;</span><br><span class="line">	float2 lightMapUV : TEXCOORD1;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">struct Varyings &#123;</span><br><span class="line">	float4 positionCS : SV_POSITION;</span><br><span class="line">	float2 baseUV : VAR_BASE_UV;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">Varyings MetaPassVertex (Attributes input) &#123;</span><br><span class="line">	Varyings output;</span><br><span class="line">	input.positionOS.xy =</span><br><span class="line">		input.lightMapUV * unity_LightmapST.xy + unity_LightmapST.zw;</span><br><span class="line">	input.positionOS.z = input.positionOS.z &gt; <span class="number">0.0</span> ? FLT_MIN : <span class="number">0.0</span>;</span><br><span class="line">    <span class="comment">//屏幕空间坐标</span></span><br><span class="line">	output.positionCS = TransformWorldToHClip(input.positionOS);</span><br><span class="line">	output.baseUV = TransformBaseUV(input.baseUV);</span><br><span class="line">	<span class="keyword">return</span> output;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">float4 MetaPassFragment (Varyings input) : SV_TARGET &#123;</span><br><span class="line">	float4 base = GetBase(input.baseUV);</span><br><span class="line">	Surface surface;</span><br><span class="line">	ZERO_INITIALIZE(Surface, surface);</span><br><span class="line">	surface.color = base.rgb;</span><br><span class="line">	surface.metallic = GetMetallic(input.baseUV);</span><br><span class="line">	surface.smoothness = GetSmoothness(input.baseUV);</span><br><span class="line">	BRDF brdf = GetBRDF(surface);</span><br><span class="line">	float4 meta = <span class="number">0.0</span>;</span><br><span class="line">	<span class="keyword">if</span> (unity_MetaFragmentControl.x) &#123;</span><br><span class="line">		meta = float4(brdf.diffuse, <span class="number">1.0</span>);</span><br><span class="line">        <span class="comment">//通过添加按粗糙度缩放的镜面反射率的一半来略微提升结果。这背后的想法是，高镜面反射但粗糙的材质也会传递一些间接光。</span></span><br><span class="line">		meta.rgb += brdf.specular * brdf.roughness * <span class="number">0.5</span>;</span><br><span class="line">        <span class="comment">//幂函数调整结果</span></span><br><span class="line">		meta.rgb = <span class="built_in">min</span>(</span><br><span class="line">			PositivePow(meta.rgb, unity_OneOverOutputBoost), unity_MaxOutputValue</span><br><span class="line">		);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">else</span> <span class="keyword">if</span> (unity_MetaFragmentControl.y) &#123;</span><br><span class="line">		<span class="comment">//如果选择开启自发光</span></span><br><span class="line">		meta = float4(GetEmission(input.baseUV), <span class="number">1.0</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> meta;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#endif</span></span><br></pre></td></tr></table></figure>
+
+<p>最后效果</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124151054462.png" alt="image-20250124151054462"></p>
+<p>最后将光源模式设置为Mixed，启动混合光源可得【这里Mixed的是间接光和直接光，不冲突】</p>
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124151202072.png" alt="image-20250124151202072"></p>
+<h2 id="自发光"><a href="#自发光" class="headerlink" title="自发光"></a>自发光</h2><h3 id="添加自发光"><a href="#添加自发光" class="headerlink" title="添加自发光"></a>添加自发光</h3><figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">[NoScaleOffset] _EmissionMap(&quot;Emission&quot;, <span class="number">2</span>D) = &quot;white&quot; &#123;&#125;</span><br><span class="line">		[HDR] _EmissionColor(&quot;Emission&quot;, Color) = (<span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>, <span class="number">0.0</span>)</span><br><span class="line"><span class="comment">//为了使无光照材质能够发出非常亮的光，我们可以将 HDR 属性添加到 的 base color 属性中</span></span><br><span class="line">[HDR] _BaseColor(&quot;Color&quot;, Color) = (<span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>, <span class="number">1.0</span>)</span><br><span class="line">...</span><br><span class="line">TEXTURE2D(_EmissionMap);</span><br><span class="line"></span><br><span class="line">UNITY_INSTANCING_BUFFER_START(UnityPerMaterial)</span><br><span class="line">	UNITY_DEFINE_INSTANCED_PROP(float4, _EmissionColor)</span><br><span class="line">	…</span><br><span class="line">UNITY_INSTANCING_BUFFER_END(UnityPerMaterial)</span><br></pre></td></tr></table></figure>
+
+<p>修改LitPass.hlsl片元着色器</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">float3 color = GetLighting(surface, brdf, gi);</span><br><span class="line">	color += GetEmission(input.baseUV);</span><br><span class="line">	<span class="keyword">return</span> float4(color, surface.alpha);</span><br></pre></td></tr></table></figure>
+
+<p>修改MetaPass.hlsl片元着色器</p>
+<figure class="highlight glsl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (unity_MetaFragmentControl.y) &#123;</span><br><span class="line">		<span class="comment">//如果选择开启自发光</span></span><br><span class="line">		meta = float4(GetEmission(input.baseUV), <span class="number">1.0</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> meta;</span><br></pre></td></tr></table></figure>
+
+<h3 id="烘焙自发光"><a href="#烘焙自发光" class="headerlink" title="烘焙自发光"></a>烘焙自发光</h3><p>必须启用每种材质的发射烘焙，首先在编辑器中添加配置面板</p>
+<figure class="highlight c#"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">BakedEmission</span> ()</span> &#123;</span><br><span class="line">		EditorGUI.BeginChangeCheck();</span><br><span class="line">    	<span class="comment">//添加配置面板</span></span><br><span class="line">		editor.LightmapEmissionProperty();</span><br><span class="line">    	<span class="comment">//如果LightmapEmission属性发生变化</span></span><br><span class="line">		<span class="keyword">if</span> (EditorGUI.EndChangeCheck()) &#123;</span><br><span class="line">			<span class="keyword">foreach</span> (Material m <span class="keyword">in</span> editor.targets) &#123;</span><br><span class="line">                <span class="comment">//取消禁用黑色自发光，也就是考虑自发光</span></span><br><span class="line">				m.globalIlluminationFlags &amp;= ~MaterialGlobalIlluminationFlags.EmissiveIsBlack;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/img/loading.png" data-original="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/image-20250124153911371.png" alt="image-20250124153911371"></p>
+<hr>
+<p><strong>参考文章</strong></p>
+<p><a target="_blank" rel="noopener" href="https://catlikecoding.com/unity/tutorials/custom-srp/baked-light/">烘焙光源 (catlikecoding.com)</a></p>
+<p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/393639054">URP GI源码阅读</a></p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="http://example.com">云杰</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="http://example.com/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/">http://example.com/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://example.com" target="_blank">YunJie's BLOG</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%B8%B8%E6%88%8F%E6%B8%B2%E6%9F%93/">游戏渲染</a></div><div class="post_share"><div class="social-share" data-image="/img/deku.png" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2024/08/13/TheCherno-%E6%B8%B8%E6%88%8F%E5%BC%95%E6%93%8E%E7%B3%BB%E5%88%97-45-Shader-Library/" title="TheCherno 游戏引擎系列 45-Shader Library"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">TheCherno 游戏引擎系列 45-Shader Library</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2024/07/25/Unity-SRP-01-%E8%87%AA%E5%AE%9A%E4%B9%89%E7%AE%A1%E7%BA%BF/" title="Unity SRP 01-自定义管线"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-07-25</div><div class="title">Unity SRP 01-自定义管线</div></div></a></div><div><a href="/2024/07/27/Unity-SRP-02-%E7%BB%98%E5%88%B6%E8%B0%83%E7%94%A8/" title="Unity SRP 02-绘制调用"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-07-27</div><div class="title">Unity SRP 02-绘制调用</div></div></a></div><div><a href="/2024/08/05/Unity-SRP-03-%E5%9F%BA%E7%A1%80%E5%85%89%E7%85%A7/" title="Unity SRP 03-基础光照"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-05</div><div class="title">Unity SRP 03-基础光照</div></div></a></div><div><a href="/2024/08/07/Unity%E4%B8%AD%E9%80%A0%E4%B8%80%E4%B8%AAPBR%E6%9D%90%E8%B4%A8/" title="Unity中造一个PBR材质"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2024-08-07</div><div class="title">Unity中造一个PBR材质</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.png" data-original="/img/deku.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">云杰</div><div class="author-info__description">我们的故事才刚开始，要迈向更远的彼方</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">9</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">6</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/JoYunJie"><i class="fab fa-github"></i><span>Follow Me</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎来到云杰的BLOG!!!</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7"><span class="toc-number">1.</span> <span class="toc-text">Unity SRP 05-烘焙光照</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%83%98%E7%84%99%E9%9D%99%E6%80%81%E5%85%89%E6%BA%90"><span class="toc-number">1.1.</span> <span class="toc-text">烘焙静态光源</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%BA%E6%99%AF%E7%85%A7%E6%98%8E%E8%AE%BE%E7%BD%AE"><span class="toc-number">1.1.1.</span> <span class="toc-text">场景照明设置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%BA%E6%99%AF%E5%85%89%E6%BA%90%E8%AE%BE%E7%BD%AE"><span class="toc-number">1.1.2.</span> <span class="toc-text">场景光源设置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E5%AF%B9%E8%B1%A1"><span class="toc-number">1.1.3.</span> <span class="toc-text">静态对象</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%87%E6%A0%B7%E5%85%89%E7%85%A7%E8%B4%B4%E5%9B%BE"><span class="toc-number">1.1.4.</span> <span class="toc-text">采样光照贴图</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%89%E7%85%A7%E6%8E%A2%E9%92%88"><span class="toc-number">1.2.</span> <span class="toc-text">光照探针</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%87%87%E6%A0%B7%E6%8E%A2%E9%92%88"><span class="toc-number">1.2.1.</span> <span class="toc-text">采样探针</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#LPPV%EF%BC%88LightProbeProxyVolume%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">LPPV（LightProbeProxyVolume）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Meta-Pass"><span class="toc-number">1.4.</span> <span class="toc-text">Meta Pass</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%87%AA%E5%8F%91%E5%85%89"><span class="toc-number">1.5.</span> <span class="toc-text">自发光</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B7%BB%E5%8A%A0%E8%87%AA%E5%8F%91%E5%85%89"><span class="toc-number">1.5.1.</span> <span class="toc-text">添加自发光</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%83%98%E7%84%99%E8%87%AA%E5%8F%91%E5%85%89"><span class="toc-number">1.5.2.</span> <span class="toc-text">烘焙自发光</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2025/01/22/Unity-SRP-05-%E7%83%98%E7%84%99%E5%85%89%E7%85%A7/" title="Unity SRP 05-烘焙光照">Unity SRP 05-烘焙光照</a><time datetime="2025-01-22T14:58:31.000Z" title="发表于 2025-01-22 22:58:31">2025-01-22</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/08/13/TheCherno-%E6%B8%B8%E6%88%8F%E5%BC%95%E6%93%8E%E7%B3%BB%E5%88%97-45-Shader-Library/" title="TheCherno 游戏引擎系列 45-Shader Library">TheCherno 游戏引擎系列 45-Shader Library</a><time datetime="2024-08-13T08:28:56.000Z" title="发表于 2024-08-13 16:28:56">2024-08-13</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/08/11/Unity-%E8%A7%86%E5%9F%9F%E5%88%86%E6%9E%90%E6%95%88%E6%9E%9C/" title="Unity 视域分析效果">Unity 视域分析效果</a><time datetime="2024-08-11T02:44:19.000Z" title="发表于 2024-08-11 10:44:19">2024-08-11</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/08/07/Unity%E4%B8%AD%E9%80%A0%E4%B8%80%E4%B8%AAPBR%E6%9D%90%E8%B4%A8/" title="Unity中造一个PBR材质">Unity中造一个PBR材质</a><time datetime="2024-08-07T13:13:56.000Z" title="发表于 2024-08-07 21:13:56">2024-08-07</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2024/08/05/Unity-SRP-03-%E5%9F%BA%E7%A1%80%E5%85%89%E7%85%A7/" title="Unity SRP 03-基础光照">Unity SRP 03-基础光照</a><time datetime="2024-08-05T14:58:31.000Z" title="发表于 2024-08-05 22:58:31">2024-08-05</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2025 By 云杰</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js?v=4.13.0"></script><script src="/js/main.js?v=4.13.0"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0.33/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload@17.8.8/dist/lazyload.iife.min.js"></script><div class="js-pjax"><script>if (!window.MathJax) {
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      tags: 'ams'
+    },
+    chtml: {
+      scale: 1.1
+    },
+    options: {
+      renderActions: {
+        findScript: [10, doc => {
+          for (const node of document.querySelectorAll('script[type^="math/tex"]')) {
+            const display = !!node.type.match(/; *mode=display/)
+            const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display)
+            const text = document.createTextNode('')
+            node.parentNode.replaceChild(text, node)
+            math.start = {node: text, delim: '', n: 0}
+            math.end = {node: text, delim: '', n: 0}
+            doc.math.push(math)
+          }
+        }, '']
+      }
+    }
+  }
+  
+  const script = document.createElement('script')
+  script.src = 'https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.min.js'
+  script.id = 'MathJax-script'
+  script.async = true
+  document.head.appendChild(script)
+} else {
+  MathJax.startup.document.state(0)
+  MathJax.texReset()
+  MathJax.typesetPromise()
+}</script></div><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/fireworks.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1.1.3/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = true;
+document.body.addEventListener('input', POWERMODE);
+</script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js?v=4.13.0"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var a=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,d=o();function o(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(t){(a||t)&&(d=o());for(var e,i=0;i<d.length;i++)0<=(e=(e=d[i]).getBoundingClientRect()).bottom&&0<=e.left&&e.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,a,n,o=d[i];e=function(){d=d.filter(function(t){return o!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(o)},(t=o).dataset.loaded||(t.hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(a=new Image,n=t.getAttribute("data-original"),a.onload=function(){t.src=n,t.removeAttribute("data-original"),t.setAttribute("data-loaded",!0),e&&e()},a.onerror=function(){t.removeAttribute("data-original"),t.setAttribute("data-loaded",!1),t.src=n},t.src!==n&&(a.src=n)))}()}function e(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",e),r.addEventListener("resize",e),r.addEventListener("orientationchange",e)}(this);</script></body></html>
